@@ -14,17 +14,29 @@ public class StudentDAO {
 	@PersistenceContext
 	EntityManager entityManager;
 	
+	public StudentDAO() {
+		super();
+	}
+	
+	public StudentDAO(EntityManager entityManager) {
+		super();
+		this.entityManager = entityManager;
+	}
 	
 	public Student findStudent(int id){
 		Student student = entityManager.find(Student.class, id);
 		return student;
 	}
 	
-	public Student save(Student student){
+	public Student createStudent(String name, String enrollmentId, String tutor){
+		Student student = new Student();
+		student.setName(name);
+		student.setEnrollmentID(enrollmentId);
+		student.setTutorName(tutor);
 		entityManager.persist(student);
 		return student;
 	}
-	
+
 	public int getStudentCount(){
 		Query q = entityManager.createQuery("select count(*) from Students");
 		Integer cnt = (Integer) q.getSingleResult();
