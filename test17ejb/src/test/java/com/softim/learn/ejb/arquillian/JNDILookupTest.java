@@ -5,8 +5,13 @@ package com.softim.learn.ejb.arquillian;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.ejb.EJB;
+import javax.naming.NamingException;
+
 import org.jboss.arquillian.container.test.api.Deployment;
 import org.jboss.arquillian.junit.Arquillian;
 import org.jboss.shrinkwrap.api.Archive;
@@ -21,9 +26,9 @@ import org.jboss.shrinkwrap.resolver.api.maven.ScopeType;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import com.softim.learn.ejb.app1.func.BrowseStudents;
 import com.softim.learn.ejb.app1.func.StudentsManagement;
 import com.softim.learn.ejb.app1.func.StudentsManagementInterfaceLocal;
-
 import com.softim.learn.jpa.Student;
 import com.softim.learn.jpa.StudentDAO;
 
@@ -110,4 +115,53 @@ public class JNDILookupTest {
 		assertTrue(studentsManagement.hasStudenDAO());
 		System.out.println("After test testStudentDAOIniected");
 	}
+	
+//	@Test
+//	public void geterateStudents() throws NamingException, SQLException{
+//		Generate10kStudnets gens = new Generate10kStudnets();
+//		gens.truncate();
+//		gens.create10kStudents();
+//	}
+	
+	@Test
+	public void browseStudentsByPage() throws NamingException, SQLException, InterruptedException{
+		System.out.println("sleep 20s");
+		Thread.sleep(20000);
+		long fs=Runtime.getRuntime().freeMemory();
+		System.out.println("browseStudentsByPage start");
+		BrowseStudents bs=new BrowseStudents();
+		bs.initBrowsing();
+		int pg=1;
+		List<Student> sl = bs.getPage(pg);
+		while (!bs.isCurrentPageEmpty()){
+			//System.out.println(pg+" : "+sl.size());
+			pg++;
+			if (pg % 1000 == 0){
+				System.out.println("pos : "+(pg*20));
+				Thread.sleep(400);
+			}
+			sl = bs.getPage(pg);
+		}
+		System.out.println("browseStudentsByPage end, mem used="+(fs-Runtime.getRuntime().freeMemory())/1000000);
+		
+		fs=Runtime.getRuntime().freeMemory();
+		System.out.println("readAllStudents start");
+		bs=new BrowseStudents();
+		bs.initBrowsing();
+		int pos=1;
+		ArrayList<Student> sal = new ArrayList<Student>();
+		Student stud=bs.getStudentAtPos(pos);
+		
+		while (stud!=null){
+			sal.add(stud);
+			pos++;
+			if (pos % 20000 == 0){
+				System.out.println("pos : "+pos);
+				Thread.sleep(400);
+			}
+			stud=bs.getNextStudent();
+		}
+		System.out.println("readAllStudents end, mem used="+(fs-Runtime.getRuntime().freeMemory())/1000000);
+	}
+	
 }
